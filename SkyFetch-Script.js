@@ -30,6 +30,7 @@
 // @license      GPLv3
 // @downloadURL  https://github.com/CookSleep/SkyFetch-Script/raw/main/SkyFetch-Script.js
 // @updateURL    https://github.com/CookSleep/SkyFetch-Script/raw/main/SkyFetch-Script.js
+// ==/UserScript==
 
 /*
  * 本脚本使用了 [Twitter Media Downloader](https://greasyfork.org/es/scripts/423001-twitter-media-downloader) 项目的下载按钮 SVG，
@@ -40,8 +41,6 @@
  * which is licensed under the MIT License.
  * MIT License: https://opensource.org/licenses/MIT
  */
-
-// ==/UserScript==
 
 (function() {
     'use strict';
