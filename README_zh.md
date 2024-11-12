@@ -36,6 +36,7 @@
 1. 安装 [Tampermonkey](https://www.tampermonkey.net/) 浏览器扩展
 2. 访问 [SkyFetch 脚本](https://github.com/CookSleep/SkyFetch-Script/raw/main/SkyFetch-Script.user.js)
 3. 在 Tampermonkey 中点击"安装"
+> 对于使用基于 Chrome 浏览器的篡改猴扩展用户，启用开发者模式是根据 Manifest V3 更新引入的必要条件。您需要在浏览器的插件设置页面启用开发者模式，否则脚本将完全无法工作！
 
 ## 使用方法
 

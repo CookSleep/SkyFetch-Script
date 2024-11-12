@@ -36,6 +36,7 @@ This project also uses the download button SVG from the [Twitter Media Downloade
 1. Install [Tampermonkey](https://www.tampermonkey.net/) browser extension
 2. Visit [SkyFetch Script](https://github.com/CookSleep/SkyFetch-Script/raw/main/SkyFetch-Script.user.js)
 3. Click "Install" in Tampermonkey
+> For users of the Tampermonkey extension based on Chrome browsers, enabling developer mode is a necessary condition introduced by the Manifest V3 update. You need to enable developer mode in the browser's extension settings page, otherwise the script will not work at all!
 
 ## How to Use
 
