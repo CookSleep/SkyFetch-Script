@@ -28,8 +28,8 @@
 // @grant        GM_getValue
 // @run-at       document-end
 // @license      GPLv3
-// @downloadURL  https://github.com/CookSleep/SkyFetch-Script/raw/main/SkyFetch-Script.js
-// @updateURL    https://github.com/CookSleep/SkyFetch-Script/raw/main/SkyFetch-Script.js
+// @downloadURL  https://github.com/CookSleep/SkyFetch-Script/raw/main/SkyFetch-Script.user.js
+// @updateURL    https://github.com/CookSleep/SkyFetch-Script/raw/main/SkyFetch-Script.user.js
 // ==/UserScript==
 
 /*
