@@ -34,7 +34,7 @@
 ## 安装方法
 
 1. 安装 [Tampermonkey](https://www.tampermonkey.net/) 浏览器扩展
-2. 访问 [SkyFetch 脚本](https://github.com/CookSleep/SkyFetch-Script/raw/main/SkyFetch-Script.js)
+2. 访问 [SkyFetch 脚本](https://github.com/CookSleep/SkyFetch-Script/raw/main/SkyFetch-Script.user.js)
 3. 在 Tampermonkey 中点击"安装"
 
 ## 使用方法
