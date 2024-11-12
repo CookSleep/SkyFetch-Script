@@ -34,7 +34,7 @@ This project also uses the download button SVG from the [Twitter Media Downloade
 ## Installation
 
 1. Install [Tampermonkey](https://www.tampermonkey.net/) browser extension
-2. Visit [SkyFetch Script](https://github.com/CookSleep/SkyFetch-Script/raw/main/SkyFetch-Script.js)
+2. Visit [SkyFetch Script](https://github.com/CookSleep/SkyFetch-Script/raw/main/SkyFetch-Script.user.js)
 3. Click "Install" in Tampermonkey
 
 ## How to Use
