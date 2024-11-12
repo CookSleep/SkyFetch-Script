@@ -17,7 +17,7 @@
 ![下载结果](BlueSky_Bluesky_@bsky.app_2024-09-17_1_1o2i.jpg)
 > BlueSky_Bluesky_@bsky.app_2024-09-17_1_1o2i.jpg
 
-> BlueSky_用户名_ID_下载日期_随机标识符.jpg
+> BlueSky_用户名_ID_图片发布日期_随机标识符.jpg
 
 ## 功能特性
 
