@@ -17,7 +17,7 @@ This project also uses the download button SVG from the [Twitter Media Downloade
 ![Download Result](BlueSky_Bluesky_@bsky.app_2024-09-17_1_1o2i.jpg)
 > BlueSky_Bluesky_@bsky.app_2024-09-17_1_1o2i.jpg
 
-> BlueSky_Username_ID_ImagePublicationDate_RandomIdentifier.jpg
+> BlueSky_Username_ID_ImagePublicationDate_ImageNumber_RandomIdentifier.jpg
 
 ## Features
 
