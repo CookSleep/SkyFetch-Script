@@ -1,23 +1,23 @@
 // ==UserScript==
 // @name         SkyFetch - BlueSky 最高分辨率图片下载
 // @namespace    https://github.com/CookSleep
-// @version      1.0
+// @version      1.1
 // @name:en      SkyFetch - High-Resolution Image Downloader for BlueSky
 // @name:en-uk   SkyFetch - High-Resolution Image Downloader for BlueSky
 // @name:ja      SkyFetch - BlueSky用高解像度画像ダウンローダー
 // @name:ko      SkyFetch - BlueSky용 고해상도 이미지 다운로더
 // @name:ru      SkyFetch - Загрузчик Изображений Высокого Разрешения для BlueSky
-// @name:zh-cn   SkyFetch - BlueSky 最高分辨率图片下载
-// @name:zh-tw   SkyFetch - BlueSky 最高解析度圖片下載
+// @name:zh-CN   SkyFetch - BlueSky 最高分辨率图片下载
+// @name:zh-TW   SkyFetch - BlueSky 最高解析度圖片下載
 // @name:yue     SkyFetch - BlueSky 最高解析度圖片下載
 // @description         在 BlueSky 含有图片的帖子右下角添加下载按钮，自动下载最高分辨率图片，可自定义命名规则。
 // @description:en      Add a download button at the bottom right of BlueSky posts containing images to automatically download the highest resolution images with customizable naming rules.
 // @description:en-uk   Add a download button at the bottom right of BlueSky posts containing images to automatically download the highest resolution images with customizable naming rules.
 // @description:ja      画像を含むBlueSkyの投稿の右下隅にダウンロードボタンを追加し、最高解像度の画像を自動的にダウンロードし、カスタマイズ可能な命名規則を適用します。
-// @description:ko      이미지가 포함된 BlueSky 게시물의 오른쪽 하단에 다운로드 버튼을 추가하여 최고 해상도 이미지를 자동으로 다운로드하고 사용자 정의 가능한 명명 규칙을 적용합니다。
+// @description:ko      이미지가 포함된 BlueSky 게시물의 오른쪽 하단에 다운로드 버튼을 추가하여 최고 해상도 이미지를 자동으로 다운로드하고 사용자 정의 가능한 명명 규칙을 적용합니다.
 // @description:ru      Добавляет кнопку загрузки в правый нижний угол постов BlueSky, содержащих изображения, для автоматической загрузки изображений наивысшего разрешения с настраиваемыми правилами именования.
-// @description:zh-cn   在 BlueSky 含有图片的帖子右下角添加下载按钮，自动下载最高分辨率图片，可自定义命名规则。
-// @description:zh-tw   在 BlueSky 含有圖片的帖子右下角添加下載按鈕，自動下載最高解析度圖片，可自定義命名規則。
+// @description:zh-CN   在 BlueSky 含有图片的帖子右下角添加下载按钮，自动下载最高分辨率图片，可自定义命名规则。
+// @description:zh-TW   在 BlueSky 含有圖片的帖子右下角添加下載按鈕，自動下載最高解析度圖片，可自定義命名規則。
 // @description:yue     在 BlueSky 含有圖片的帖子右下角添加下載按鈕，自動下載最高解析度圖片，可自定義命名規則。
 // @author       Cook Sleep
 // @match        https://bsky.app/*
@@ -453,7 +453,7 @@
             understood: 'Понятно',
             supportedLanguages: 'Поддерживаемые языки'
         },
-        'zh-cn': {
+        'zh-CN': {
             settingsTitle: 'SkyFetch 设置',
             filenameLabel: '文件名模式:',
             resetButton: '重置',
@@ -468,7 +468,7 @@
             understood: '知道了',
             supportedLanguages: '支持的语言'
         },
-        'zh-tw': {
+        'zh-TW': {
             settingsTitle: 'SkyFetch 設定',
             filenameLabel: '文件名模式:',
             resetButton: '重置',
@@ -509,9 +509,9 @@
         'ja': 'ja',
         'ko': 'ko',
         'ru': 'ru',
-        'zh-CN': 'zh-cn',
-        'zh-TW': 'zh-tw',
-        'zh-HK': 'yue'
+        'zh-Hans-CN': 'zh-CN',
+        'zh-Hant-TW': 'zh-TW',
+        'zh-Hant-HK': 'yue'
     };
 
     /**
@@ -592,7 +592,7 @@
      */
     function getBrowserLanguage() {
         const browserLang = navigator.language || navigator.userLanguage;
-        
+
         // 尝试映射浏览器语言
         let mappedLanguage = languageMapping[browserLang] ||
                             languageMapping[browserLang.split('-')[0]] ||
@@ -613,8 +613,8 @@
         'ja': '日本語',
         'ko': '한국어',
         'ru': 'Русский',
-        'zh-cn': '简体中文',
-        'zh-tw': '繁體中文',
+        'zh-CN': '简体中文',
+        'zh-TW': '繁體中文',
         'yue': '粵文'
     };
 
@@ -700,7 +700,7 @@
                     </div>
                 </div>
             `;
-            
+
             content.insertBefore(supportedLangList, button);
 
             modal.appendChild(content);
@@ -712,20 +712,32 @@
     /**
      * 监听语言变化
      */
+    let isReloading = false; // 是否正在刷新
+    const RELOAD_COOLDOWN = 2500; // 刷新冷却时间（毫秒）
+
     function observeLanguageChange() {
         const observer = new MutationObserver(async (mutations) => {
             for (const mutation of mutations) {
                 if (mutation.type === 'attributes' && mutation.attributeName === 'lang') {
                     const { mappedLanguage, siteLanguage } = getSiteLanguage();
-                    
+
                     // 如果切换到不支持的语言，且未显示过提示
-                    if (!(siteLanguage in languageMapping) && 
+                    if (!(siteLanguage in languageMapping) &&
                         LanguageNoticeManager.shouldShowNotice(siteLanguage)) {
                         await showUnsupportedLanguageNotice(siteLanguage);
                         LanguageNoticeManager.markAsNotified(siteLanguage);
                     }
-                    
-                    // 刷新页面以应用新语言
+
+                    const currentTime = Date.now();
+                    const lastReload = parseInt(localStorage.getItem('lastReloadTime') || '0');
+
+                    // 如果距离上次刷新不足2秒，则不刷新
+                    if (currentTime - lastReload < RELOAD_COOLDOWN) {
+                        break;
+                    }
+
+                    // 记录本次刷新时间
+                    localStorage.setItem('lastReloadTime', currentTime.toString());
                     window.location.reload();
                     break;
                 }
@@ -978,7 +990,7 @@
         if (status) {
             btn.classList.add(status);
         }
-        
+
         // 根据当前语言设置提示文本
         btn.title = status === 'completed' ? t.downloadCompleted :
                     status === 'failed' ? t.downloadFailed :
@@ -1035,8 +1047,8 @@
         'ja': /(\d{4})年(\d{1,2})月(\d{1,2})日/,
         'ko': /(\d{4})년\s+(\d{1,2})월\s+(\d{1,2})일/,
         'ru': /(\d{1,2})\s+([\wа-яё]+)\s+(\d{4})/i,
-        'zh-cn': /(\d{4})年(\d{1,2})月(\d{1,2})日/,
-        'zh-tw': /(\d{4})年(\d{1,2})月(\d{1,2})日/,
+        'zh-CN': /(\d{4})年(\d{1,2})月(\d{1,2})日/,
+        'zh-TW': /(\d{4})年(\d{1,2})月(\d{1,2})日/,
         'yue': /(\d{4})年(\d{1,2})月(\d{1,2})日/
     };
 
@@ -1046,8 +1058,8 @@
         'ja': { yearIndex: 1, monthIndex: 2, dayIndex: 3, monthIsName: false },
         'ko': { yearIndex: 1, monthIndex: 2, dayIndex: 3, monthIsName: false },
         'ru': { yearIndex: 3, monthIndex: 2, dayIndex: 1, monthIsName: true },
-        'zh-cn': { yearIndex: 1, monthIndex: 2, dayIndex: 3, monthIsName: false },
-        'zh-tw': { yearIndex: 1, monthIndex: 2, dayIndex: 3, monthIsName: false },
+        'zh-CN': { yearIndex: 1, monthIndex: 2, dayIndex: 3, monthIsName: false },
+        'zh-TW': { yearIndex: 1, monthIndex: 2, dayIndex: 3, monthIsName: false },
         'yue': { yearIndex: 1, monthIndex: 2, dayIndex: 3, monthIsName: false }
     };
 
@@ -1076,7 +1088,7 @@
         // 获取映射后的语言代码
         const siteLanguage = getSiteLanguage();
         const lang = siteLanguage.mappedLanguage || 'en';
-        
+
         const pattern = datePatterns[lang];
         const config = dateParseConfig[lang];
 
@@ -1192,9 +1204,9 @@
         currentLang = mappedLanguage;
 
         // 检查是否需要显示语言不支持提示
-        const needShowNotice = !(siteLanguage in languageMapping) && 
+        const needShowNotice = !(siteLanguage in languageMapping) &&
                               LanguageNoticeManager.shouldShowNotice(siteLanguage);
-        
+
         if (needShowNotice) {
             await showUnsupportedLanguageNotice(siteLanguage);
             LanguageNoticeManager.markAsNotified(siteLanguage);
