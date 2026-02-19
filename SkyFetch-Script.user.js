@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SkyFetch - BlueSky 最高分辨率图片下载
 // @namespace    https://github.com/CookSleep
-// @version      1.1
+// @version      1.2
 // @name:en      SkyFetch - High-Resolution Image Downloader for BlueSky
 // @name:en-uk   SkyFetch - High-Resolution Image Downloader for BlueSky
 // @name:ja      SkyFetch - BlueSky用高解像度画像ダウンローダー
