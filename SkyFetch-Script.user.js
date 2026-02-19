@@ -42,7 +42,7 @@
  * MIT License: https://opensource.org/licenses/MIT
  */
 
-(function() {
+(function () {
     'use strict';
 
     // =====================
@@ -595,8 +595,8 @@
 
         // 尝试映射浏览器语言
         let mappedLanguage = languageMapping[browserLang] ||
-                            languageMapping[browserLang.split('-')[0]] ||
-                            'en';
+            languageMapping[browserLang.split('-')[0]] ||
+            'en';
 
         // 如果映射后的语言不在支持列表中，使用英语
         if (!isLanguageSupported(mappedLanguage)) {
@@ -688,15 +688,15 @@
                 <div class="supported-languages-grid">
                     <div class="languages-column">
                         ${Object.values(supportedLanguages)
-                            .slice(0, Math.ceil(Object.values(supportedLanguages).length / 2))
-                            .map(lang => `<div class="language-item">• ${lang}</div>`)
-                            .join('')}
+                    .slice(0, Math.ceil(Object.values(supportedLanguages).length / 2))
+                    .map(lang => `<div class="language-item">• ${lang}</div>`)
+                    .join('')}
                     </div>
                     <div class="languages-column">
                         ${Object.values(supportedLanguages)
-                            .slice(Math.ceil(Object.values(supportedLanguages).length / 2))
-                            .map(lang => `<div class="language-item">• ${lang}</div>`)
-                            .join('')}
+                    .slice(Math.ceil(Object.values(supportedLanguages).length / 2))
+                    .map(lang => `<div class="language-item">• ${lang}</div>`)
+                    .join('')}
                     </div>
                 </div>
             `;
@@ -863,15 +863,17 @@
     function addDownloadButton() {
         const t = translations[currentLang];
         const posts = document.querySelectorAll('[data-testid^="postThreadItem"], [data-testid^="feedItem"]');
+        const imageSelector = 'img[src*="cdn.bsky.app/img/feed_thumbnail/plain"], img[src*="cdn.bsky.app/img/feed_fullsize/plain"]';
 
         posts.forEach(post => {
             if (post.querySelector('.tmd-down')) return;
 
-            const hasImages = post.querySelectorAll('img[src*="cdn.bsky.app/img/feed_thumbnail/plain"]').length > 0;
+            const hasImages = post.querySelectorAll(imageSelector).length > 0;
 
             if (hasImages) {
-                const interactionBar = post.querySelector('div.css-175oi2r[style*="justify-content: space-between"]');
-                if (interactionBar) {
+                const interactionBar = findInteractionBar(post);
+                const buttonContainer = findDownloadButtonContainer(interactionBar);
+                if (buttonContainer) {
                     const downloadBtn = document.createElement('div');
                     downloadBtn.className = 'tmd-down';
                     downloadBtn.title = t.downloadButtonLabel;
@@ -897,16 +899,15 @@
                         </button>
                     `;
 
-                    interactionBar.appendChild(downloadBtn);
+                    buttonContainer.appendChild(downloadBtn);
 
                     downloadBtn.onclick = (event) => {
                         event.stopPropagation(); // 阻止事件冒泡
                         downloadBtn.classList.add('loading');
                         updateButtonStatus(downloadBtn, 'loading');
 
-                        const imageElements = post.querySelectorAll('img[src*="cdn.bsky.app/img/feed_thumbnail/plain"]');
+                        const imageElements = post.querySelectorAll(imageSelector);
                         const imageUrls = Array.from(imageElements).map(img => convertUrl(img.src)).filter(url => url !== null);
-                        const postId = post.getAttribute('data-testid').split('-').pop();
                         const postDate = extractPostDate(post);
                         const { userName, userId } = extractUserInfo(post);
 
@@ -956,6 +957,38 @@
     }
 
     /**
+     * 查找帖子操作栏（回复/转发/点赞/收藏/分享）
+     * @param {Element} post - 帖子元素
+     * @returns {Element|null}
+     */
+    function findInteractionBar(post) {
+        const buttonIds = ['replyBtn', 'repostBtn', 'likeBtn', 'postBookmarkBtn', 'postShareBtn', 'postDropdownBtn'];
+
+        for (const id of buttonIds) {
+            const button = post.querySelector(`button[data-testid="${id}"]`);
+            if (!button) continue;
+
+            const bar = button.closest('div[style*="justify-content: space-between"]');
+            if (bar) return bar;
+        }
+
+        return post.querySelector('div[style*="justify-content: space-between"]');
+    }
+
+    /**
+     * 获取下载按钮实际插入容器
+     * 优先使用右侧按钮组，避免撑开中间间距
+     * @param {Element|null} interactionBar - 操作栏根容器
+     * @returns {Element|null}
+     */
+    function findDownloadButtonContainer(interactionBar) {
+        if (!interactionBar) return null;
+
+        const rightGroup = interactionBar.querySelector('div[style*="justify-content: flex-end"]');
+        return rightGroup || interactionBar;
+    }
+
+    /**
      * 更新所有已存在的下载按钮
      */
     function updateAllDownloadButtons() {
@@ -993,8 +1026,8 @@
 
         // 根据当前语言设置提示文本
         btn.title = status === 'completed' ? t.downloadCompleted :
-                    status === 'failed' ? t.downloadFailed :
-                    status === 'loading' ? t.downloading :
+            status === 'failed' ? t.downloadFailed :
+                status === 'loading' ? t.downloading :
                     t.downloadButtonLabel;
 
         // 控制 SVG 显示
@@ -1099,44 +1132,35 @@
 
         const monthMap = monthMaps[lang] || monthMaps['en'];
 
-        // 主贴时间格式
-        const mainPostTime = post.querySelector('div[style*="color: rgb(174, 187, 201)"][style*="line-height: 13.125px"]');
-        if (mainPostTime) {
-            const dateText = mainPostTime.textContent;
+        const parseDateFromText = (dateText) => {
+            if (!dateText) return null;
             const match = dateText.match(pattern);
-            if (match) {
-                let year, month, day;
-                const monthText = match[config.monthIndex].toLowerCase();
-                if (config.monthIsName) {
-                    month = monthMap[monthText] || monthText.padStart(2, '0');
-                } else {
-                    month = match[config.monthIndex].padStart(2, '0');
-                }
-                day = match[config.dayIndex].padStart(2, '0');
-                year = match[config.yearIndex];
-                return `${year}-${month}-${day}`;
+            if (!match) return null;
+
+            let year, month, day;
+            const monthText = String(match[config.monthIndex]).toLowerCase();
+            if (config.monthIsName) {
+                month = monthMap[monthText] || monthText.padStart(2, '0');
+            } else {
+                month = String(match[config.monthIndex]).padStart(2, '0');
             }
+            day = String(match[config.dayIndex]).padStart(2, '0');
+            year = String(match[config.yearIndex]);
+            return `${year}-${month}-${day}`;
+        };
+
+        // 旧版与回帖 tooltip 时间
+        const tooltipTime = post.querySelector('a[data-tooltip][href*="/post/"]');
+        if (tooltipTime) {
+            const parsed = parseDateFromText(tooltipTime.getAttribute('data-tooltip'));
+            if (parsed) return parsed;
         }
 
-        // 回帖时间格式
-        const replyTime = post.querySelector('a[data-tooltip][href*="/post/"]');
-        if (replyTime) {
-            const dateText = replyTime.getAttribute('data-tooltip');
-            if (dateText) {
-                const match = dateText.match(pattern);
-                if (match) {
-                    let year, month, day;
-                    const monthText = match[config.monthIndex].toLowerCase();
-                    if (config.monthIsName) {
-                        month = monthMap[monthText] || monthText.padStart(2, '0');
-                    } else {
-                        month = match[config.monthIndex].padStart(2, '0');
-                    }
-                    day = match[config.dayIndex].padStart(2, '0');
-                    year = match[config.yearIndex];
-                    return `${year}-${month}-${day}`;
-                }
-            }
+        // 新版详情页时间文本
+        const dateCandidates = post.querySelectorAll('time, div[style*="font-size: 13"], span[style*="font-size: 13"], div[dir="auto"], span[dir="auto"]');
+        for (const node of dateCandidates) {
+            const parsed = parseDateFromText((node.textContent || '').trim());
+            if (parsed) return parsed;
         }
 
         return 'unknown_date';
@@ -1151,6 +1175,104 @@
         let userName = 'unknown_user';
         let userId = 'unknown_id';
 
+        const cleanText = (text) => String(text || '').replace(/[\u202A-\u202E]/g, '').trim();
+        const normalizeText = (text) => cleanText(text).replace(/\u00A0/g, ' ').trim();
+        const isGenericProfileLabel = (text) => /^(查看个人资料|View profile|プロフィールを表示|프로필 보기|Просмотреть профиль)$/i.test(text);
+
+        // 新版：优先从 data-testid 提取作者标识（例如 postThreadItem-by-nehvus.bsky.social）
+        const dataTestId = post.getAttribute('data-testid') || '';
+        const byMatch = dataTestId.match(/-by-(.+)$/);
+        if (byMatch && byMatch[1]) {
+            userId = byMatch[1];
+        }
+
+        // 新版：从作者 profile 链接可见文本提取昵称与账号（避免 aria-label 为“查看个人资料”）
+        const profileLinks = Array.from(post.querySelectorAll('a[href^="/profile/"]'));
+        const normalizedUserId = userId.replace(/^@/, '');
+
+        const textProfileLinks = profileLinks.filter(link => {
+            const text = normalizeText(link.textContent);
+            if (!text) return false;
+            if (isGenericProfileLabel(text)) return false;
+            const ariaLabel = normalizeText(link.getAttribute('aria-label'));
+            if (ariaLabel && (ariaLabel.includes('头像') || /avatar/i.test(ariaLabel))) return false;
+            return true;
+        });
+
+        const primaryProfileLink = textProfileLinks.find(link => {
+            if (!normalizedUserId || normalizedUserId === 'unknown_id') return true;
+            const href = normalizeText(link.getAttribute('href'));
+            return href.includes(`/profile/${normalizedUserId}`);
+        }) || textProfileLinks[0] || profileLinks[0];
+
+        if (primaryProfileLink) {
+            const linkText = normalizeText(primaryProfileLink.textContent);
+            if (linkText && !linkText.startsWith('@') && !isGenericProfileLabel(linkText)) {
+                userName = linkText;
+            }
+            if (linkText && linkText.startsWith('@') && userId === 'unknown_id') {
+                userId = linkText;
+            }
+        }
+
+        // 从同一作者 profile 链接中补齐用户名与账号
+        const sameAuthorLinks = textProfileLinks.filter(link => {
+            if (!normalizedUserId || normalizedUserId === 'unknown_id') return true;
+            const href = normalizeText(link.getAttribute('href'));
+            return href.includes(`/profile/${normalizedUserId}`);
+        });
+
+        for (const link of sameAuthorLinks) {
+            const text = normalizeText(link.textContent);
+            if (!text || isGenericProfileLabel(text)) continue;
+            if (userName === 'unknown_user' && !text.startsWith('@')) {
+                userName = text;
+            }
+            if (userId === 'unknown_id' && text.startsWith('@')) {
+                userId = text;
+            }
+        }
+
+        // aria-label 仅作兜底，且过滤通用文案
+        if (userName === 'unknown_user' || userId === 'unknown_id') {
+            const fallbackProfileLink = profileLinks.find(link => {
+                const label = normalizeText(link.getAttribute('aria-label'));
+                return label && !isGenericProfileLabel(label) && !label.includes('头像') && !/avatar/i.test(label);
+            });
+
+            if (fallbackProfileLink) {
+                const label = normalizeText(fallbackProfileLink.getAttribute('aria-label'));
+                if (userName === 'unknown_user' && label && !label.startsWith('@')) {
+                    userName = label;
+                }
+                if (userId === 'unknown_id' && label && label.startsWith('@')) {
+                    userId = label;
+                }
+            }
+        }
+
+        if (userId === 'unknown_id') {
+            const hrefProfileLink = profileLinks.find(link => {
+                const href = normalizeText(link.getAttribute('href'));
+                return /^\/profile\/[^/?#]+/.test(href);
+            });
+            if (hrefProfileLink) {
+                const href = normalizeText(hrefProfileLink.getAttribute('href'));
+                const profileMatch = href.match(/^\/profile\/([^/?#]+)/);
+                if (profileMatch && profileMatch[1]) {
+                    userId = profileMatch[1];
+                }
+            }
+        }
+
+        if (userId === 'unknown_id') {
+            const handleNode = Array.from(post.querySelectorAll('div[dir="auto"], span[dir="auto"]'))
+                .find(el => /^@/.test(cleanText(el.textContent)));
+            if (handleNode) {
+                userId = cleanText(handleNode.textContent);
+            }
+        }
+
         // 主贴样式 - 同时支持暗色和浅色模式
         const mainPost = post.querySelector('div[style*="font-weight: 600"][style*="font-size: 16.875px"]');
         const mainPostId = post.querySelector('div[style*="font-size: 15px"][style*="line-height: 20px"]');
@@ -1159,15 +1281,19 @@
         const replyPost = post.querySelector('span[style*="font-weight: 600"][style*="line-height: 20px"]');
         const replyPostId = post.querySelector('span[style*="line-height: 20px"]:not([style*="font-weight"])');
 
-        if (mainPost && mainPostId) {
-            userName = mainPost.textContent.replace(/[\u202A-\u202E]/g, '').trim();
-            userId = mainPostId.textContent.replace(/[\u202A-\u202E]/g, '').trim();
-        } else if (replyPost && replyPostId) {
-            userName = replyPost.textContent.replace(/[\u202A-\u202E]/g, '').trim();
-            userId = replyPostId.textContent.replace(/[\u202A-\u202E]/g, '').trim();
+        if ((userName === 'unknown_user' || userId === 'unknown_id') && mainPost && mainPostId) {
+            userName = cleanText(mainPost.textContent);
+            userId = cleanText(mainPostId.textContent);
+        } else if ((userName === 'unknown_user' || userId === 'unknown_id') && replyPost && replyPostId) {
+            userName = cleanText(replyPost.textContent);
+            userId = cleanText(replyPostId.textContent);
         }
 
-        userId = userId.replace(/\s+/g, '').trim();
+        userName = cleanText(userName);
+        userId = cleanText(userId).replace(/\s+/g, '').trim();
+        if (!userId.startsWith('@') && userId !== 'unknown_id' && !userId.startsWith('did:')) {
+            userId = `@${userId}`;
+        }
 
         return { userName, userId };
     }
@@ -1205,7 +1331,7 @@
 
         // 检查是否需要显示语言不支持提示
         const needShowNotice = !(siteLanguage in languageMapping) &&
-                              LanguageNoticeManager.shouldShowNotice(siteLanguage);
+            LanguageNoticeManager.shouldShowNotice(siteLanguage);
 
         if (needShowNotice) {
             await showUnsupportedLanguageNotice(siteLanguage);
